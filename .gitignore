@@ -56,7 +56,8 @@ docs/_build/
 # PyBuilder
 target/
 
-
+#vagrant directory
+.vagrant
 
 configs/*
 !configs/default.py
