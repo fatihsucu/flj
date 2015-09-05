@@ -17,6 +17,10 @@ def createApp(config, url_prefix=None):
     app.register_blueprint(
         jobs.getBlueprint(config), url_prefix=url_prefix)
 
+    @app.route('/', methods=['GET'])
+    def get():
+        return "Welcome to FLJ API END-POINT. At the moment, there\
+         is not any documentation. Sorry."
     return app
 
 
