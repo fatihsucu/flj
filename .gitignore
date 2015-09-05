@@ -55,3 +55,9 @@ docs/_build/
 
 # PyBuilder
 target/
+
+
+
+configs/*
+!configs/default.py
+!configs/__init__.py
