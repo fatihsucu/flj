@@ -4,6 +4,7 @@ sudo a2enmod wsgi
 
 sudo apt-get install mongodb-server
 sudo apt-get install python-pip
+sudo apt-get install python-dev
 sudo apt-get install supervisor
 
 sudo pip install flask
