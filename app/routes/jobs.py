@@ -21,12 +21,12 @@ At Snowcoach Holidays, we are looking for experienced French speakers to work at
                     "city": "London",
                     "region": "Westcost",
                     "lat": 412,
-                    "long": 121,
+                    "long": 121
                     },
                 "salary": "Competitive + Benefits",
                 "jobType": "Contract/Interim",
                 "stats": {
-                  "view": 10,
+                  "viewed": 10,
                   "starred": 4
                 }
               }
