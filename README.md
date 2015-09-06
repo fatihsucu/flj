@@ -10,4 +10,4 @@ cd setup
 sudo ./setup.sh
 
 ```
-And to test whether it works or not, go to your browser and hit to http://flj.com/api/jobs
+And to test whether it works or not, go to your browser and hit to http://flj/api/v1/jobs
