@@ -1,15 +1,16 @@
 # -*- coding: utf8 -*-
-'''
-Bu kod dosyasında widget ile ilgili fonksiyonlar tanımlanır.
-
-Hata kodları için bkz: 'https://github.com/botego/livechat/wiki/api_errors'
-'''
 from app.libraries import loggerFactory
 from app.libraries.mongodb import getDb
 from bson.objectid import ObjectId
 from app.modules.errors import (NotFoundException,
                                 WrongArgumentException)
 import arrow
+
+
+def renameID(job):
+    job['id'] = job["_id"]
+    del job["_id"]
+    return job
 
 
 class Jobs(object):
@@ -22,22 +23,33 @@ class Jobs(object):
         self.logger = loggerFactory.get()
 
     def insert(self, job):
-        raise NotImplementedError()
+        # schema validation is needed here
+        self.storage.insert(job)
+        return renameID(job)
 
-    def get(self, filter, length=100):
-        raise NotImplementedError()
+    def get(self, criteria=None, length=100):
+        return self.storage.find(criteria).limit(100)
 
     def getOne(self, jobId):
-        raise NotImplementedError()
+        job = self.storage.find_one({"_id": ObjectId(jobId)})
+        if not job:
+            raise NotFoundException("job with id {} not found".format(jobId))
+        return renameID(job)
 
     def delete(self, jobId):
-        raise NotImplementedError()
+        self.storage.remove({"_id": ObjectId(jobId)})
 
     def increaseView(self, jobId):
-        raise NotImplementedError()
+        return self.storage.update(
+            {"_id": ObjectId(jobId)},
+            {"$inc": {"stats.viewed": 1}})
 
     def increaseStar(self, jobId):
-        raise NotImplementedError()
+        return self.storage.update(
+            {"_id": ObjectId(jobId)},
+            {"$inc": {"stats.starred": 1}})
 
     def decreaseStar(self, jobId):
-        raise NotImplementedError()
+        return self.storage.update(
+            {"_id": ObjectId(jobId)},
+            {"$inc": {"stats.starred": -1}})

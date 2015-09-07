@@ -11,6 +11,7 @@ sudo pip install schema
 sudo pip install colorlog
 sudo pip install pillow
 sudo pip install pymongo
+sudo pip install arrow
 
 sudo cp /flj/setup/apache-dev.conf /etc/apache2/sites-available/flj-dev.conf
 sudo a2ensite flj-dev.conf
