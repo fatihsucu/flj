@@ -12,7 +12,7 @@ class TestWidget(BaseTest, unittest.TestCase):
     JOBS = [{
         "date": "2014-04-12 15:30:12",
         "title": "Receptionist - Fluent French Speaker",
-        "description": "At XYZ Hotels, we are looking for experienced French speakers to work at one ...",
+        "description": "At KLMN, we are looking for experienced French speakers to work at one ...",
         "company": "1X Hotels",
         "salary": "Competitive + Benefits",
         "jobType": "Contract/Interim",
@@ -34,7 +34,7 @@ class TestWidget(BaseTest, unittest.TestCase):
         "description": "Office & Accounts Administrator - Construction",
         "company": "Tenders",
         "salary": "£21,000 to £23,000 p.a. plus some fantastic benefit",
-        "jobType": "Permanent",
+        "jobType": "part-time",
         "location": {
           "country": "Ireland",
           "state": "",
@@ -66,6 +66,25 @@ class TestWidget(BaseTest, unittest.TestCase):
           "viewed": 82,
           "starred": 2
         }
+    }, {
+        "date": "2014-04-14 21:00:12",
+        "title": "Trainee Personal Trainers",
+        "description": "One of my top London based Media clients urgently seeks a talented Payroll and Benefits Administrator ",
+        "company": "Blink",
+        "salary": "Up to £37,000",
+        "jobType": "permanent",
+        "location": {
+          "country": "United Kingdom",
+          "state": "",
+          "city": "London",
+          "region": "North",
+          "lat": 421,
+          "long": 121
+        },
+        "stats": {
+          "viewed": 53,
+          "starred": 7
+        }
     }
     ]
 
@@ -79,7 +98,7 @@ class TestWidget(BaseTest, unittest.TestCase):
             self.assertIsInstance(job['id'], ObjectId)
 
     def test_01_getWithoutFilter(self):
-        jobsFound = self.jobsModule.get()
+        jobsFound = self.jobsModule.get(filtering={})
         self.assertEqual(jobsFound.count(), len(self.JOBS))
 
     def test_02_getOne(self):
@@ -111,6 +130,67 @@ class TestWidget(BaseTest, unittest.TestCase):
         jobFound = self.jobsModule.getOne(jobId)
         self.assertEqual(
             job['stats']['starred'] - 1, jobFound['stats']['starred'])
+
+    def test_0401_getByLocationFilter(self):
+        def doFilter(job, count, countWithRegion):
+            filtering = {
+                "location": {
+                    "country": job["location"]["country"].upper(),
+                    "city": job["location"]["city"].lower(),
+                }
+            }
+
+            jobsFound = self.jobsModule.get(filtering=filtering)
+            self.assertEqual(count, jobsFound.count())
+
+            filtering['location']['region'] = job["location"]["region"].upper()
+            jobsFound = self.jobsModule.get(filtering=filtering)
+            self.assertEqual(countWithRegion, jobsFound.count())
+
+        doFilter(self.JOBS[3], 3, 1)  # 3 london jobs, 1 westcost jobs
+        doFilter(self.JOBS[1], 1, 1)  # 1 dublin job, 1 central job
+
+    def test_0402_getByKeywordFilter(self):
+        def doFilter(keyword, count):
+            filtering = {
+                "title": keyword
+            }
+            jobsFound = self.jobsModule.get(filtering=filtering)
+            self.assertEqual(count, jobsFound.count())
+        doFilter("geRM", 1)  # 1 greman job
+        doFilter("speak", 3)  # 3 jobs containg *speak* in title
+
+    def test_0403_getByJobTypeFilter(self):
+        def doFilter(keyword, count):
+            filtering = {
+                "jobType": keyword
+            }
+            jobsFound = self.jobsModule.get(filtering=filtering)
+            self.assertEqual(count, jobsFound.count())
+        doFilter("part", 2)  # 2 part time jobs
+        doFilter("peRManent", 1)  # 1 permanent job
+
+    def test_0405_getByCombinedFilter(self):
+        def doFilter(job, keyword, jobType, count):
+            filtering = {
+                "location": {
+                    "country": job["location"]["country"].upper(),
+                    "city": job["location"]["city"].lower(),
+                },
+                "title": keyword,
+                "description": keyword,
+                "jobType": jobType
+            }
+            jobsFound = self.jobsModule.get(filtering=filtering)
+            self.assertEqual(count, jobsFound.count())
+
+        job = self.JOBS[1]
+        doFilter(job, "speak", job['jobType'], 1)  # 1 speaker in Dublin
+        doFilter(job, "speak", "naaa", 0)  # 0 speaker job with type naaa in Dublin
+
+        job = self.JOBS[0]
+        doFilter(job, "speak", job['jobType'], 2)  # 2 part time jobs
+        doFilter(job, "one of my", "permanent", 1)  # 2 part time jobs
 
 
 unittest.main()

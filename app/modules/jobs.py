@@ -8,7 +8,7 @@ import arrow
 
 
 def renameID(job):
-    job['id'] = job["_id"]
+    job["id"] = job["_id"]
     del job["_id"]
     return job
 
@@ -19,16 +19,59 @@ class Jobs(object):
     def __init__(self, config):
         super(Jobs, self).__init__()
         self.db = getDb()
-        self.storage = self.db['jobs']
+        self.storage = self.db["jobs"]
         self.logger = loggerFactory.get()
 
     def insert(self, job):
         # schema validation is needed here
+        job["location"]["country"] = job["location"]["country"].lower()
+        job["location"]["city"] = job["location"]["city"].lower()
+        job["location"]["region"] = job["location"]["region"].lower()
+        job["jobType"] = job["jobType"].lower()
         self.storage.insert(job)
         return renameID(job)
 
-    def get(self, criteria=None, length=100):
-        return self.storage.find(criteria).limit(100)
+    def get(self, filtering=None, length=100):
+        # TODO: fsinceId, fmaxId
+        fsinceId = filtering.get("sinceId", None)
+        fmaxId = filtering.get("maxId", None)
+        flocation = filtering.get("location", None)
+        ftitle = filtering.get("title", None)
+        fdescription = filtering.get("description", None)
+        fjobType = filtering.get("jobType", "").lower()
+        query = {"$or": []}
+
+        if fsinceId:
+            query["_id"] = {"$gt": fsinceId}
+
+        if fmaxId:
+            if query.get("_id"):
+                query["_id"]["$lt"] = fmaxId
+            else:
+                query["_id"] = {"$gt": fsinceId}
+
+        if flocation:
+            query["location.country"] = flocation["country"].lower()
+            query["location.city"] = flocation["city"].lower()
+            if flocation.get("region", None):
+                query["location.region"] = flocation["region"].lower()
+
+        if ftitle:
+            query["$or"].append({"title": {"$regex": ftitle, "$options": "i"}})
+
+        if fdescription:
+            query["$or"].append({"description": {
+                "$regex": fdescription, "$options": "i"}})
+
+        if fjobType:
+            query["jobType"] = {"$regex": fjobType}
+
+        if not query["$or"]:
+            del query["$or"]
+
+        self.logger.debug("query: " + str(query))
+
+        return self.storage.find(query).limit(length)
 
     def getOne(self, jobId):
         job = self.storage.find_one({"_id": ObjectId(jobId)})
