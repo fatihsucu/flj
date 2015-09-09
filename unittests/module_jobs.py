@@ -170,6 +170,20 @@ class TestWidget(BaseTest, unittest.TestCase):
         doFilter("part", 2)  # 2 part time jobs
         doFilter("peRManent", 1)  # 1 permanent job
 
+    def test_0403_getBySinceMaxFilter(self):
+        jobsFound = list(self.jobsModule.get(filtering={}))
+        sinceJob = jobsFound[1]
+        maxJob = jobsFound[3]
+        targetJob = jobsFound[2]
+
+        filtering = {
+            "sinceId": sinceJob["_id"],
+            "maxId": maxJob["_id"]
+        }
+
+        jobsFound = list(self.jobsModule.get(filtering=filtering))
+        self.assertEqual(jobsFound[0]["_id"], targetJob["_id"])
+
     def test_0405_getByCombinedFilter(self):
         def doFilter(job, keyword, jobType, count):
             filtering = {
