@@ -1,9 +1,4 @@
 # -*- coding: utf8 -*-
-'''
-Bu kod dosyasında widget ile ilgili fonksiyonlar tanımlanır.
-
-Hata kodları için bkz: 'https://github.com/botego/livechat/wiki/api_errors'
-'''
 from app.libraries import loggerFactory
 from app.libraries.mongodb import getDb
 from bson.objectid import ObjectId
@@ -12,32 +7,91 @@ from app.modules.errors import (NotFoundException,
 import arrow
 
 
+def renameID(job):
+    job["id"] = job["_id"]
+    del job["_id"]
+    return job
+
+
 class Jobs(object):
     """This module handles operations related to job entries"""
 
     def __init__(self, config):
         super(Jobs, self).__init__()
         self.db = getDb()
-        self.storage = self.db['jobs']
+        self.storage = self.db["jobs"]
         self.logger = loggerFactory.get()
 
     def insert(self, job):
-        raise NotImplementedError()
+        # schema validation is needed here
+        job["location"]["country"] = job["location"]["country"].lower()
+        job["location"]["city"] = job["location"]["city"].lower()
+        job["location"]["region"] = job["location"]["region"].lower()
+        job["jobType"] = job["jobType"].lower()
+        self.storage.insert(job)
+        return renameID(job)
 
-    def get(self, filter, length=100):
-        raise NotImplementedError()
+    def get(self, filtering=None, length=100):
+        fsinceId = filtering.get("sinceId", None)
+        fmaxId = filtering.get("maxId", None)
+        flocation = filtering.get("location", None)
+        ftitle = filtering.get("title", None)
+        fdescription = filtering.get("description", None)
+        fjobType = filtering.get("jobType", "").lower()
+        query = {"$or": []}
+
+        if fsinceId:
+            query["_id"] = {"$gt": fsinceId}
+
+        if fmaxId:
+            if query.get("_id"):
+                query["_id"]["$lt"] = fmaxId
+            else:
+                query["_id"] = {"$gt": fsinceId}
+
+        if flocation:
+            query["location.country"] = flocation["country"].lower()
+            query["location.city"] = flocation["city"].lower()
+            if flocation.get("region", None):
+                query["location.region"] = flocation["region"].lower()
+
+        if ftitle:
+            query["$or"].append({"title": {"$regex": ftitle, "$options": "i"}})
+
+        if fdescription:
+            query["$or"].append({"description": {
+                "$regex": fdescription, "$options": "i"}})
+
+        if fjobType:
+            query["jobType"] = {"$regex": fjobType}
+
+        if not query["$or"]:
+            del query["$or"]
+
+        self.logger.debug("query: " + str(query))
+
+        return self.storage.find(query).limit(length)
 
     def getOne(self, jobId):
-        raise NotImplementedError()
+        job = self.storage.find_one({"_id": ObjectId(jobId)})
+        if not job:
+            raise NotFoundException("job with id {} not found".format(jobId))
+        return renameID(job)
 
     def delete(self, jobId):
-        raise NotImplementedError()
+        self.storage.remove({"_id": ObjectId(jobId)})
 
     def increaseView(self, jobId):
-        raise NotImplementedError()
+        return self.storage.update(
+            {"_id": ObjectId(jobId)},
+            {"$inc": {"stats.viewed": 1}})
 
     def increaseStar(self, jobId):
-        raise NotImplementedError()
+        return self.storage.update(
+            {"_id": ObjectId(jobId)},
+            {"$inc": {"stats.starred": 1}})
 
     def decreaseStar(self, jobId):
-        raise NotImplementedError()
+        return self.storage.update(
+            {"_id": ObjectId(jobId)},
+            {"$inc": {"stats.starred": -1}})

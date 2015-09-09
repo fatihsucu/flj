@@ -98,11 +98,6 @@ class Config(object):
                 'propagate': True,
                 'level': 'INFO'
             },
-            'socketServer': {
-                'handlers': ['socketFile'],
-                'level': 'INFO',
-                'propagate': False,
-            },
             'celeryWorker': {
                 'handlers': ['celeryWorker'],
                 'level': 'INFO',
@@ -184,7 +179,6 @@ class Dev(Config):
         # super(self.__class__, self).__init__()
         Config.__init__(self)
         self.LOGGING['loggers']['']['level'] = 'DEBUG'
-        self.LOGGING['loggers']['socketServer']['level'] = 'DEBUG'
 
 
 class Test(Config):
@@ -201,4 +195,3 @@ class Test(Config):
     def __init__(self):
         Config.__init__(self)
         self.LOGGING['loggers']['']['level'] = 'DEBUG'
-        self.LOGGING['loggers']['socketServer']['level'] = 'DEBUG'
