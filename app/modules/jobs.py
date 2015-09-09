@@ -32,7 +32,6 @@ class Jobs(object):
         return renameID(job)
 
     def get(self, filtering=None, length=100):
-        # TODO: fsinceId, fmaxId
         fsinceId = filtering.get("sinceId", None)
         fmaxId = filtering.get("maxId", None)
         flocation = filtering.get("location", None)

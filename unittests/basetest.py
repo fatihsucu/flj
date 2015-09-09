@@ -24,3 +24,4 @@ class BaseTest(object):
     @classmethod
     def tearDownClass(cls):
         cls.db.jobs.remove()
+        cls.db.accounts.remove()

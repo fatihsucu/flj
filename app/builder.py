@@ -13,9 +13,12 @@ def createApp(config, url_prefix=None):
     app.config.from_object(config)
 
     from routes import jobs
+    from routes import accounts
 
     app.register_blueprint(
         jobs.getBlueprint(config), url_prefix=url_prefix)
+    app.register_blueprint(
+        accounts.getBlueprint(config), url_prefix=url_prefix)
 
     @app.route('/', methods=['GET'])
     def get():
