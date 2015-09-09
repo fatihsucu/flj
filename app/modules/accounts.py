@@ -22,13 +22,17 @@ class Accounts(object):
         self.storage = self.db["accounts"]
         self.logger = loggerFactory.get()
 
+    def makeAlarmReadyToDb(self, alarm):
+        alarm['location']['country'] = alarm['location']['country'].lower()
+        alarm['location']['city'] = alarm['location']['city'].lower()
+        alarm['location']['state'] = alarm['location']['state'].lower()
+        return alarm
+
     def insert(self, account):
         # schema validation is needed here
-        self.storage.insert(account)
         for alarm in account['alarms']:
-            alarm['location']['country'] = alarm['location']['country'].lower()
-            alarm['location']['city'] = alarm['location']['city'].lower()
-            alarm['location']['state'] = alarm['location']['state'].lower()
+            alarm = self.makeAlarmReadyToDb(alarm)
+        self.storage.insert(account)
         return renameID(account)
 
     def get(self, filtering=None, length=100):
@@ -41,26 +45,60 @@ class Accounts(object):
                 "account with id {} not found".format(accountId))
         return renameID(account)
 
-    def get(self, filtering):
+    def get(self, filtering=None):
+        if not filtering:
+            filtering = dict()
         flocation = filtering.get("location", None)
         fkeyword = filtering.get("keyword", [])
-        query = {"$or": []}
+        query = {}
 
         if flocation:
-            query["alarms.$location.country"] = flocation["country"].lower()
-            query["alarms.$location.city"] = flocation["city"].lower()
-            if flocation.get("region", None):
-                query["alarms.$location.region"] = flocation["region"].lower()
+            query["location.country"] = flocation["country"].lower()
+            query["location.city"] = flocation["city"].lower()
+            if flocation.get("state", None):
+                query["location.state"] = flocation["state"].lower()
 
         if fkeyword:
-            query["alarms.$keywords"] = {"$in": fkeyword}
+            query["keywords"] = {"$in": fkeyword}
 
-        if not query["$or"]:
-            del query["$or"]
-        print str(query)
+        if flocation or fkeyword:
+            query = {"alarms": {"$elemMatch": query}}
+
         self.logger.debug("account query: " + str(query))
 
         return self.storage.find(query)
+
+    def getByGcm(self, gcmId):
+        account = self.storage.find_one({"gcmId": gcmId})
+        if not account:
+            raise NotFoundException(
+                "account with gcm {} not found".format(gcmId))
+        return renameID(account)
+
+    def insertAlarm(self, accountId, alarm):
+        alarm = self.makeAlarmReadyToDb(alarm)
+        self.storage.update(
+            {
+                "_id": ObjectId(accountId)
+            },
+            {
+                "$push": {"alarms": alarm}
+            })
+
+    def removeAlarm(self, accountId, alarm):
+        location = alarm["location"]
+        self.storage.update(
+            {
+                "_id": ObjectId(accountId)
+            },
+            {
+                "$pull": {"alarms": {
+                    "location.country": location["country"],
+                    "location.state": location["state"],
+                    "location.city": location["city"],
+                    "keywords": alarm["keywords"]
+                }}
+            })
 
     def delete(self, accountId):
         self.storage.remove({"_id": ObjectId(accountId)})

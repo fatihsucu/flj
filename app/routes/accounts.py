@@ -1,13 +1,24 @@
 # -*- coding: utf8 -*-
 from flask import Blueprint
 from app.libraries import response
+from app.modules.accounts import Accounts
 
 
 def getBlueprint(config):
     app = Blueprint('accounts', __name__)
 
-    @app.route('/accounts', methods=['GET'])
-    def get():
+    @app.route('/account/<gcmId>', methods=['GET'])
+    def getByGcm(gcmId):
+        try:
+            account = Accounts(config).getByGcm(gcmId)
+            result = response.make(20, {"account": account})
+        except Exception, e:
+            result = response.makeRaw(30, e.message)
+
+        return result
+
+    @app.route('/dummies/accounts', methods=['GET'])
+    def getDummies():
         return response.make(20, {"accounts": [
               {
                 "createdAt": "2015-04-25 12:30:12",
