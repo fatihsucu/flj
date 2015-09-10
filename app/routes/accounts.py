@@ -2,12 +2,13 @@
 from flask import Blueprint
 from app.libraries import response
 from app.modules.accounts import Accounts
+from app.modules.errors import BaseException, NotFoundException
 
 
 def getBlueprint(config):
     app = Blueprint('accounts', __name__)
 
-    @app.route('/account/<gcmId>', methods=['GET'])
+    @app.route('/accounts/<gcmId>', methods=['GET'])
     def getByGcm(gcmId):
         try:
             account = Accounts(config).getByGcm(gcmId)

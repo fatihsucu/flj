@@ -10,15 +10,12 @@ class TestAccount(BaseTest, unittest.TestCase):
 
     ACCOUNTS = [{
         "id": None,
-        "createdAt": "2015-04-22 12:30:12",
-        "lastLogin": "2015-04-25 15:41:27",
         "fname": "Mustafa",
         "lname": "Atik",
         "email": "mm@aasscsaccccmm.com",
         "gcmId": "code1",
         "alarms": [
             {
-                "createdAt": "2015-04-23 15:30:12",
                 "location": {
                     "country": "United Kingdom",
                     "state": "",
@@ -30,7 +27,6 @@ class TestAccount(BaseTest, unittest.TestCase):
                     "developer"
                 ]
             }, {
-                "createdAt": "2015-05-03 12:40:42",
                 "location": {
                     "country": "United Kingdom",
                     "state": "",
@@ -43,15 +39,12 @@ class TestAccount(BaseTest, unittest.TestCase):
         ]
       }, {
         "id": None,
-        "createdAt": "2015-05-11 11:34:22",
-        "lastLogin": "2015-04-12 21:31:62",
         "fname": "John",
         "lname": "Smith",
         "email": "jmm@jaasscsaccccmm.com",
         "gcmId": "code2",
         "alarms": [
             {
-                "createdAt": "2015-05-11 14:30:12",
                 "location": {
                     "country": "Ireland",
                     "state": "",
@@ -65,15 +58,12 @@ class TestAccount(BaseTest, unittest.TestCase):
         ]
       }, {
         "id": None,
-        "createdAt": "2015-05-02 02:04:21",
-        "lastLogin": "2015-05-06 08:18:35",
         "fname": "George",
         "lname": "Mich",
         "email": "gmm@gaasscsaccccmm.com",
         "gcmId": "code3",
         "alarms": [
             {
-                "createdAt": "2015-05-03 12:32:22",
                 "location": {
                     "country": "United Kingdom",
                     "state": "",
@@ -83,7 +73,6 @@ class TestAccount(BaseTest, unittest.TestCase):
                     "developer"
                 ]
             }, {
-                "createdAt": "2015-05-03 12:40:42",
                 "location": {
                     "country": "United Kingdom",
                     "state": "",
@@ -175,7 +164,6 @@ class TestAccount(BaseTest, unittest.TestCase):
     def test_0500_insertAlarm(self):
         account = self.ACCOUNTS[1]
         newAlarm = {
-            "createdAt": "2015-05-03 13:11:22",
             "location": {
                 "country": "France",
                 "state": "",

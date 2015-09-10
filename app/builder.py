@@ -1,8 +1,9 @@
 # -*- coding: utf8 -*-
-from flask import Flask
+from flask import Flask, jsonify
 from flask import render_template
 import libraries.mongodb as mongodb
-from app.libraries import loggerFactory
+from app.libraries import loggerFactory, response
+from app.modules.errors import BaseException
 
 
 def createApp(config, url_prefix=None):
@@ -19,6 +20,18 @@ def createApp(config, url_prefix=None):
         jobs.getBlueprint(config), url_prefix=url_prefix)
     app.register_blueprint(
         accounts.getBlueprint(config), url_prefix=url_prefix)
+
+    @app.errorhandler(BaseException)
+    def handle_exceptions(error):
+        return jsonify({"status": error.__json__()})
+
+    @app.errorhandler(Exception)
+    def handle_exceptions(error):
+        return jsonify({"status": {
+            "type": "UncaughtError",
+            "code": 500,
+            "message": "something went wrong, and a notification about this" +
+                    " just sent to the manager."}}), 500
 
     @app.route('/', methods=['GET'])
     def get():
