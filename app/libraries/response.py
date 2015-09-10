@@ -95,4 +95,17 @@ def makeRaw(statusCode, statusMessage, data=None):
     if data:
         response['data'] = data
 
-    return JSONEncoder().encode(response)
+    return ReadyResponse(response)
+
+
+class ReadyResponse(object):
+    def __init__(self, data):
+        super(ReadyResponse, self).__init__()
+        self.data = data
+
+    def __json__(self):
+        strData = self.__str__()
+        return json.loads(strData)
+
+    def __str__(self):
+        return JSONEncoder().encode(self.data)

@@ -27,8 +27,9 @@ def createApp(config, url_prefix=None):
 
     @app.errorhandler(Exception)
     def handle_exceptions(error):
+        loggerFactory.get().error(error, exc_info=True)
         return jsonify({"status": {
-            "type": "UncaughtError",
+            "type": "UncaughtError - " + error.__class__.__name__,
             "code": 500,
             "message": "something went wrong, and a notification about this" +
                     " just sent to the manager."}}), 500

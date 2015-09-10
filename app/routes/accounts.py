@@ -1,22 +1,54 @@
 # -*- coding: utf8 -*-
-from flask import Blueprint
+from flask import Blueprint, jsonify
 from app.libraries import response
+from app.modules.errors import WrongArgumentException
+from app.libraries.routerDecorators import jsonizeRequest
 from app.modules.accounts import Accounts
-from app.modules.errors import BaseException, NotFoundException
 
 
 def getBlueprint(config):
     app = Blueprint('accounts', __name__)
 
-    @app.route('/accounts/<gcmId>', methods=['GET'])
-    def getByGcm(gcmId):
+    @app.route('/accounts/', methods=['POST'])
+    @jsonizeRequest
+    def register(data):
         try:
-            account = Accounts(config).getByGcm(gcmId)
-            result = response.make(20, {"account": account})
+            account = data["account"]
         except Exception, e:
-            result = response.makeRaw(30, e.message)
+            raise WrongArgumentException(
+                "account data not found in the request body")
 
-        return result
+        account = Accounts(config).insert(account)
+        return jsonify(response.make(20, {"account": account}).__json__())
+
+    @app.route('/accounts/<accountId>', methods=['GET'])
+    def getOne(accountId):
+        account = Accounts(config).getOne(accountId)
+        return jsonify(response.make(20, {"account": account}).__json__())
+
+    @app.route('/accounts/<accountId>/alarms/', methods=['PUT'])
+    @jsonizeRequest
+    def insertAlarm(accountId, data):
+        try:
+            alarm = data["alarm"]
+        except Exception, e:
+            raise WrongArgumentException(
+                "alarm data not found in the request body")
+
+        Accounts(config).insertAlarm(accountId, alarm)
+        return jsonify(response.make(20, alarm).__json__())
+
+    @app.route('/accounts/<accountId>/alarms/', methods=['DELETE'])
+    @jsonizeRequest
+    def removeAlarm(accountId, data):
+        try:
+            alarm = data["alarm"]
+        except Exception, e:
+            raise WrongArgumentException(
+                "alarm data not found in the request body")
+
+        Accounts(config).removeAlarm(accountId, alarm)
+        return jsonify(response.make(20, alarm).__json__())
 
     @app.route('/dummies/accounts', methods=['GET'])
     def getDummies():

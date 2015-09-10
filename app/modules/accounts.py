@@ -31,6 +31,9 @@ class Accounts(object):
     def insert(self, account):
         # schema validation is needed here
         account["createdAt"] = arrow.utcnow().naive
+        if "alarms" not in account:
+            account["alarms"] = []
+
         for alarm in account['alarms']:
             alarm = self.makeAlarmReadyToDb(alarm)
         self.storage.insert(account)
@@ -88,6 +91,7 @@ class Accounts(object):
             })
 
     def removeAlarm(self, accountId, alarm):
+        alarm = self.makeAlarmReadyToDb(alarm)
         location = alarm["location"]
         self.storage.update(
             {
