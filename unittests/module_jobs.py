@@ -206,5 +206,15 @@ class TestWidget(BaseTest, unittest.TestCase):
         doFilter(job, "speak", job['jobType'], 2)  # 2 part time jobs
         doFilter(job, "one of my", "permanent", 1)  # 2 part time jobs
 
+    # @TODO: delete method test
+
+    def test_0406_getByIdsFilter(self):
+        ids = [self.JOBS[0]["id"], self.JOBS[1]["id"]]
+        filtering = {
+            "ids": ids
+        }
+        jobsFound = self.jobsModule.get(filtering=filtering)
+        self.assertEqual(2, jobsFound.count())
+
 
 unittest.main()

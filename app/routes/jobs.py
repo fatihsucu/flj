@@ -1,12 +1,52 @@
 # -*- coding: utf8 -*-
-from flask import Blueprint
+from flask import Blueprint, jsonify
 from app.libraries import response
+from app.libraries.routerDecorators import jsonizeRequest
+from app.modules.accounts import Accounts
+from app.modules.jobs import Jobs
+from bson.objectid import ObjectId
 
 
 def getBlueprint(config):
-    app = Blueprint('jobs', __name__)
+    app = Blueprint("jobs", __name__)
 
-    @app.route('/jobs', methods=['GET'])
+    def toggleJobStar(accountId, data, method):
+        try:
+            jobId = ObjectId(data["job"]["id"])
+        except Exception, e:
+            raise WrongArgumentException(
+                "job id not found in the request body")
+
+        accounts = Accounts(config)
+        account = accounts.getOne(accountId)
+        if method == "insertStarredJob":
+            if jobId in account.get("jobs", {}).get("starred", []):
+                return
+        getattr(accounts, method)(account["id"], jobId)
+
+    @app.route("/jobs/<accountId>/starred/", methods=["PUT"])
+    @jsonizeRequest
+    def putStarredJobs(accountId, data):
+        toggleJobStar(accountId, data, "insertStarredJob")
+        return jsonify(response.make(20).__json__())
+
+    @app.route("/jobs/<accountId>/starred/", methods=["DELETE"])
+    @jsonizeRequest
+    def deleteStarredJobs(accountId, data):
+        toggleJobStar(accountId, data, "removeStarredJob")
+        return jsonify(response.make(20).__json__())
+
+    @app.route("/jobs/<accountId>/starred/", methods=["GET"])
+    def getStarredJobs(accountId):
+        account = Accounts(config).getOne(accountId)
+        starredIds = account.get("jobs", {}).get("starred", [])
+        if starredIds:
+            jobs = list(Jobs(config).get(filtering={"ids": starredIds}))
+        else:
+            jobs = []
+        return jsonify(response.make(20, {"jobs": jobs}).__json__())
+
+    @app.route("/jobs", methods=["GET"])
     def get():
         return response.make(20, {"jobs": [
               {

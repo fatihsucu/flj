@@ -32,6 +32,7 @@ class Jobs(object):
         return renameID(job)
 
     def get(self, filtering=None, length=100):
+        fids = filtering.get("ids", None)
         fsinceId = filtering.get("sinceId", None)
         fmaxId = filtering.get("maxId", None)
         flocation = filtering.get("location", None)
@@ -39,6 +40,9 @@ class Jobs(object):
         fdescription = filtering.get("description", None)
         fjobType = filtering.get("jobType", "").lower()
         query = {"$or": []}
+
+        if fids:
+            query["_id"] = {"$in": fids}
 
         if fsinceId:
             query["_id"] = {"$gt": fsinceId}
