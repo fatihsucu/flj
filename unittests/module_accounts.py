@@ -187,11 +187,22 @@ class TestAccount(BaseTest, unittest.TestCase):
         account = self.accounts.getOne(account["id"])
         self.assertEqual(initialAlarmsCount - 1, len(account["alarms"]))
 
-    def test_0700_deleteAccount(self):
+    def test_0900_deleteAccount(self):
         account = self.ACCOUNTS[0]
         self.accounts.delete(account["id"])
         accountsFound = self.accounts.get()
         self.assertEqual(len(self.ACCOUNTS) - 1, accountsFound.count())
 
+    def test_0700_starredJob(self):
+        account = self.ACCOUNTS[0]
+        jobId = ObjectId()
+
+        self.accounts.insertStarredJob(account["id"], jobId)
+        account = self.accounts.getOne(account["id"])
+        self.assertIn(jobId, account["jobs"]["starred"])
+
+        self.accounts.removeStarredJob(account["id"], jobId)
+        account = self.accounts.getOne(account["id"])
+        self.assertNotIn(jobId, account["jobs"]["starred"])
 
 unittest.main()

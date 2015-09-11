@@ -108,3 +108,23 @@ class Accounts(object):
 
     def delete(self, accountId):
         self.storage.remove({"_id": ObjectId(accountId)})
+
+    def insertStarredJob(self, accountId, jobId):
+        jobId = ObjectId(jobId)
+        self.storage.update(
+            {
+                "_id": ObjectId(accountId)
+            },
+            {
+                "$push": {"jobs.starred": jobId}
+            })
+
+    def removeStarredJob(self, accountId, jobId):
+        jobId = ObjectId(jobId)
+        self.storage.update(
+            {
+                "_id": ObjectId(accountId)
+            },
+            {
+                "$pull": {"jobs.starred": jobId}
+            })
