@@ -166,6 +166,37 @@ class Dev(Config):
     yazabilir veya gelistirme ortamina ozel yeni direktifler
     ekleyebilirsiniz.
     """
+    celeryName = 'livechat'
+    BROKER_URL = 'amqp://localhost/'
+    CELERY_RESULT_BACKEND = "mongodb://localhost//"
+    CELERY_MONGODB_BACKEND_SETTINGS = {
+        'database': 'flj_dev',
+        'taskmeta_collection': 'tasks',
+    }
+    CELERYD_MAX_TASKS_PER_CHILD = 1
+    CELERY_TIMEZONE = 'UTC'
+    BROKER_TRANSPORT_OPTIONS = {
+        'visibility_timeout': 196000,
+        'fanout_patterns': True
+        }
+    CELERY_DEFAULT_QUEUE = 'jobs'
+    CELERY_DEFAULT_ROUTING_KEY = 'jobs'
+
+    CELERY_TASK_RESULT_EXPIRES = 60 * 36
+    CELERY_DEFAULT_EXCHANGE = 'jobs'
+    CELERYD_CONCURRENCY = 1
+    CELERYD_PREFETCH_MULTIPLIER = 1
+    CELERYD_TASK_SOFT_TIME_LIMIT = 60 * 40000
+    CELERYD_TASK_TIME_LIMIT = 60 * 500000
+    CELERYBEAT_SCHEDULE = {
+        'crawl':{
+            'task': 'app.proxies.crawler.crawl',
+            'schedule': timedelta(days=1),
+            'args': []
+        }
+
+    }
+
     DEBUG = True
     NAME = 'default.dev'
     HTTP_PROTOCOL = "http"

@@ -18,7 +18,7 @@ class Jobs(object):
 
     def __init__(self, config):
         super(Jobs, self).__init__()
-        self.db = getDb()
+        self.db = getDb(config)
         self.storage = self.db["jobs"]
         self.logger = loggerFactory.get()
 

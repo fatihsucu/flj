@@ -3,6 +3,7 @@ from flask import Flask
 from flask import render_template
 import libraries.mongodb as mongodb
 from app.libraries import loggerFactory
+from app.libraries import celerySetter as celery
 
 
 def createApp(config, url_prefix=None):
@@ -27,10 +28,9 @@ def createApp(config, url_prefix=None):
     return app
 
 
-# def createCeleryApp(config):
-#     mongodb.setDefaultConfig(config)
-#     celery.setCeleryConfig(config)
-#     mailer.setMailerConfig(config)
-#     app = celery.getCelery()
-#     from livechat.proxies import widgets
-#     return app
+def createCeleryApp(config):
+    mongodb.setDefaultConfig(config)
+    celery.setCeleryConfig(config)
+    app = celery.getCelery()
+    from app.proxies import crawler
+    return app
