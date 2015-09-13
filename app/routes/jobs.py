@@ -60,7 +60,7 @@ def getBlueprint(config):
             "maxId": request.args.get("maxId", None),
             "location": location,
             "title": request.args.get("keyword", None),
-            "description": request.args.get("keyword", None),
+            "description": request.args.get("description", None),
             "jobType": request.args.get("jobType", None)
         }
 
