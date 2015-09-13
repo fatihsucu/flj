@@ -10,15 +10,12 @@ class TestAccount(BaseTest, unittest.TestCase):
 
     ACCOUNTS = [{
         "id": None,
-        "createdAt": "2015-04-22 12:30:12",
-        "lastLogin": "2015-04-25 15:41:27",
         "fname": "Mustafa",
         "lname": "Atik",
         "email": "mm@aasscsaccccmm.com",
         "gcmId": "code1",
         "alarms": [
             {
-                "createdAt": "2015-04-23 15:30:12",
                 "location": {
                     "country": "United Kingdom",
                     "state": "",
@@ -29,19 +26,25 @@ class TestAccount(BaseTest, unittest.TestCase):
                     "scientist",
                     "developer"
                 ]
+            }, {
+                "location": {
+                    "country": "United Kingdom",
+                    "state": "",
+                    "city": "Manchester",
+                    },
+                "keywords": [
+                    "manager"
+                ]
             }
         ]
       }, {
         "id": None,
-        "createdAt": "2015-05-11 11:34:22",
-        "lastLogin": "2015-04-12 21:31:62",
         "fname": "John",
         "lname": "Smith",
         "email": "jmm@jaasscsaccccmm.com",
         "gcmId": "code2",
         "alarms": [
             {
-                "createdAt": "2015-05-11 14:30:12",
                 "location": {
                     "country": "Ireland",
                     "state": "",
@@ -55,25 +58,12 @@ class TestAccount(BaseTest, unittest.TestCase):
         ]
       }, {
         "id": None,
-        "createdAt": "2015-05-02 02:04:21",
-        "lastLogin": "2015-05-06 08:18:35",
         "fname": "George",
         "lname": "Mich",
         "email": "gmm@gaasscsaccccmm.com",
         "gcmId": "code3",
         "alarms": [
             {
-                "createdAt": "2015-05-03 12:32:22",
-                "location": {
-                    "country": "United Kingdom",
-                    "state": "",
-                    "city": "London",
-                    },
-                "keywords": [
-                    "developer"
-                ]
-            }, {
-                "createdAt": "2015-05-03 12:40:42",
                 "location": {
                     "country": "United Kingdom",
                     "state": "",
@@ -81,6 +71,15 @@ class TestAccount(BaseTest, unittest.TestCase):
                     },
                 "keywords": [
                     "developer"
+                ]
+            }, {
+                "location": {
+                    "country": "United Kingdom",
+                    "state": "",
+                    "city": "London",
+                    },
+                "keywords": [
+                    "manager"
                 ]
             }
         ]
@@ -107,10 +106,7 @@ class TestAccount(BaseTest, unittest.TestCase):
         self.assertEqual(account['id'], accountFound['id'])
 
     def test_0401_getByLocationFilter(self):
-        for i in self.accounts.get(filtering={}):
-            print i["_id"], i["email"], i['alarms']
-
-        def doFilter(account, count, countWithRegion):
+        def doFilter(account, count, countWithState):
             location = account["alarms"][0]["location"]
             filtering = {
                 "location": {
@@ -122,68 +118,91 @@ class TestAccount(BaseTest, unittest.TestCase):
             accountsFound = self.accounts.get(filtering=filtering)
             self.assertEqual(count, accountsFound.count())
 
-            filtering['location']['region'] = location["region"].upper()
+            filtering['location']['state'] = location["state"].upper()
             accountsFound = self.accounts.get(filtering=filtering)
-            self.assertEqual(countWithRegion, accountsFound.count())
+            self.assertEqual(countWithState, accountsFound.count())
 
-        doFilter(self.ACCOUNTS[0], 2, 1)  # 3 london accounts
-    #     doFilter(self.ACCOUNTS[1], 1, 1)  # 1 dublin account, 1 central account
+        doFilter(self.ACCOUNTS[0], 2, 2)  # 3 london accounts
+        doFilter(self.ACCOUNTS[1], 1, 1)  # 1 dublin account, 1 central account
 
-    # def test_0402_getByKeywordFilter(self):
-    #     def doFilter(keyword, count):
-    #         filtering = {
-    #             "title": keyword
-    #         }
-    #         accountsFound = self.accounts.get(filtering=filtering)
-    #         self.assertEqual(count, accountsFound.count())
-    #     doFilter("geRM", 1)  # 1 greman account
-    #     doFilter("speak", 3)  # 3 accounts containg *speak* in title
+    def test_0402_getByKeywordFilter(self):
+        def doFilter(keyword, count):
+            filtering = {
+                "keyword": [keyword]
+            }
+            accountsFound = self.accounts.get(filtering=filtering)
+            self.assertEqual(count, accountsFound.count())
+        doFilter("developer", 2)
+        doFilter("scientist", 1)
 
-    # def test_0403_getByaccountTypeFilter(self):
-    #     def doFilter(keyword, count):
-    #         filtering = {
-    #             "accountType": keyword
-    #         }
-    #         accountsFound = self.accounts.get(filtering=filtering)
-    #         self.assertEqual(count, accountsFound.count())
-    #     doFilter("part", 2)  # 2 part time accounts
-    #     doFilter("peRManent", 1)  # 1 permanent account
+    def test_0405_getByCombinedFilter(self):
+        def doFilter(alarm, keyword, count, x=False):
+            location = alarm["location"]
+            filtering = {
+                "location": {
+                    "country": location["country"].upper(),
+                    "city": location["city"].lower(),
+                },
+                "keyword": [keyword]
+            }
+            accountsFound = self.accounts.get(filtering=filtering)
+            self.assertEqual(count, accountsFound.count())
 
-    # def test_0403_getBySinceMaxFilter(self):
-    #     accountsFound = list(self.accounts.get(filtering={}))
-    #     sinceaccount = accountsFound[1]
-    #     maxaccount = accountsFound[3]
-    #     targetaccount = accountsFound[2]
+        alarm = self.ACCOUNTS[0]["alarms"][0]
+        doFilter(alarm, "developer", 1)  # 1 developer in London
+        doFilter(alarm, "waiter", 0)  # 0 waiter in Dublin
 
-    #     filtering = {
-    #         "sinceId": sinceaccount["_id"],
-    #         "maxId": maxaccount["_id"]
-    #     }
+        alarm = self.ACCOUNTS[2]["alarms"][0]
+        doFilter(alarm, "developer", 1)
+        doFilter(alarm, "manager", 1)
 
-    #     accountsFound = list(self.accounts.get(filtering=filtering))
-    #     self.assertEqual(accountsFound[0]["_id"], targetaccount["_id"])
+    def test_0406_getByGcm(self):
+        account = self.ACCOUNTS[1]
+        accountFound = self.accounts.getByGcm(account["gcmId"])
+        self.assertEqual(account["id"], accountFound["id"])
 
-    # def test_0405_getByCombinedFilter(self):
-    #     def doFilter(account, keyword, accountType, count):
-    #         filtering = {
-    #             "location": {
-    #                 "country": account["location"]["country"].upper(),
-    #                 "city": account["location"]["city"].lower(),
-    #             },
-    #             "title": keyword,
-    #             "description": keyword,
-    #             "accountType": accountType
-    #         }
-    #         accountsFound = self.accounts.get(filtering=filtering)
-    #         self.assertEqual(count, accountsFound.count())
+    def test_0500_insertAlarm(self):
+        account = self.ACCOUNTS[1]
+        newAlarm = {
+            "location": {
+                "country": "France",
+                "state": "",
+                "city": "Paris",
+                },
+            "keywords": [
+                "artist"
+            ]
+        }
 
-    #     account = self.ACCOUNTS[1]
-    #     doFilter(account, "speak", account['accountType'], 1)  # 1 speaker in Dublin
-    #     doFilter(account, "speak", "naaa", 0)  # 0 speaker account with type naaa in Dublin
+        self.accounts.insertAlarm(account["id"], newAlarm)
+        accountsFound = self.accounts.get(filtering=newAlarm)
+        self.assertEqual(1, accountsFound.count())
 
-    #     account = self.ACCOUNTS[0]
-    #     doFilter(account, "speak", account['accountType'], 2)  # 2 part time accounts
-    #     doFilter(account, "one of my", "permanent", 1)  # 2 part time accounts
+    def test_0600_removeAlarm(self):
+        account = self.ACCOUNTS[0]
+        alarms = account["alarms"]
+        initialAlarmsCount = len(alarms)
 
+        self.accounts.removeAlarm(account["id"], alarms[0])
+        account = self.accounts.getOne(account["id"])
+        self.assertEqual(initialAlarmsCount - 1, len(account["alarms"]))
+
+    def test_0900_deleteAccount(self):
+        account = self.ACCOUNTS[0]
+        self.accounts.delete(account["id"])
+        accountsFound = self.accounts.get()
+        self.assertEqual(len(self.ACCOUNTS) - 1, accountsFound.count())
+
+    def test_0700_starredJob(self):
+        account = self.ACCOUNTS[0]
+        jobId = ObjectId()
+
+        self.accounts.insertStarredJob(account["id"], jobId)
+        account = self.accounts.getOne(account["id"])
+        self.assertIn(jobId, account["jobs"]["starred"])
+
+        self.accounts.removeStarredJob(account["id"], jobId)
+        account = self.accounts.getOne(account["id"])
+        self.assertNotIn(jobId, account["jobs"]["starred"])
 
 unittest.main()

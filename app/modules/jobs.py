@@ -24,6 +24,8 @@ class Jobs(object):
 
     def insert(self, job):
         # schema validation is needed here
+        if "id" in job:
+            del job["id"]
         job["location"]["country"] = job["location"]["country"].lower()
         job["location"]["city"] = job["location"]["city"].lower()
         job["location"]["region"] = job["location"]["region"].lower()
@@ -32,24 +34,28 @@ class Jobs(object):
         return renameID(job)
 
     def get(self, filtering=None, length=100):
+        fids = filtering.get("ids", None)
         fsinceId = filtering.get("sinceId", None)
         fmaxId = filtering.get("maxId", None)
-        flocation = filtering.get("location", None)
+        flocation = filtering.get("location", {})
         ftitle = filtering.get("title", None)
         fdescription = filtering.get("description", None)
-        fjobType = filtering.get("jobType", "").lower()
+        fjobType = filtering.get("jobType", "")
         query = {"$or": []}
 
+        if fids:
+            query["_id"] = {"$in": fids}
+
         if fsinceId:
-            query["_id"] = {"$gt": fsinceId}
+            query["_id"] = {"$gt": ObjectId(fsinceId)}
 
         if fmaxId:
             if query.get("_id"):
-                query["_id"]["$lt"] = fmaxId
+                query["_id"]["$lt"] = ObjectId(fmaxId)
             else:
-                query["_id"] = {"$gt": fsinceId}
+                query["_id"] = {"$gt": ObjectId(fmaxId)}
 
-        if flocation:
+        if flocation.get("country", None):
             query["location.country"] = flocation["country"].lower()
             query["location.city"] = flocation["city"].lower()
             if flocation.get("region", None):
@@ -63,12 +69,12 @@ class Jobs(object):
                 "$regex": fdescription, "$options": "i"}})
 
         if fjobType:
-            query["jobType"] = {"$regex": fjobType}
+            query["jobType"] = {"$regex": fjobType.lower()}
 
         if not query["$or"]:
             del query["$or"]
 
-        self.logger.debug("query: " + str(query))
+        self.logger.debug("jobs query: " + str(query))
 
         return self.storage.find(query).limit(length)
 
