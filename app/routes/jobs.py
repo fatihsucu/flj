@@ -1,5 +1,5 @@
 # -*- coding: utf8 -*-
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from app.libraries import response
 from app.libraries.routerDecorators import jsonizeRequest
 from app.modules.accounts import Accounts
@@ -48,6 +48,29 @@ def getBlueprint(config):
 
     @app.route("/jobs", methods=["GET"])
     def get():
+        location = {
+            "country": request.args.get("location.country", None),
+            "city": request.args.get("location.city", None),
+            "state": request.args.get("location.state", None),
+            "region": request.args.get("location.region", None)
+            }
+
+        filtering = {
+            "sinceId": request.args.get("sinceId", None),
+            "maxId": request.args.get("maxId", None),
+            "location": location,
+            "title": request.args.get("keyword", None),
+            "description": request.args.get("keyword", None),
+            "jobType": request.args.get("jobType", None)
+        }
+
+        jobs = list(Jobs(config).get(filtering=filtering))
+        return jsonify(response.make(20, {
+            "filter": filtering,
+            "jobs": jobs}).__json__())
+
+    @app.route("/dummies/jobs", methods=["GET"])
+    def getDummies():
         return response.make(20, {"jobs": [
               {
                 "date": "2015-04-25 15:30:12",
